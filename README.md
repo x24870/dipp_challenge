@@ -55,19 +55,19 @@ The input data should look like this:
 
 ```json
 {
-  "font_url": "https://storage.googleapis.com/dipp-massimo-development-fonts/4f2cf2b6b99d96ca.ttf",
-  "image_url": "https://storage.googleapis.com/dipp-massimo-development-images/1f1282fef735f349.jpg",
-  "text": {
-    "content": "Dipp inc, thinking out of how to draw a text on the box.",
-    "text_color": "#000000",
-    "border_color": "#000000"
-  },
-  "box": {
-    "x": 40,
-    "y": 100,
-    "width": 500,
-    "height": 180
-  }
+    "font_url": "https://storage.googleapis.com/dipp-massimo-development-fonts/4f2cf2b6b99d96ca.ttf",
+    "image_url": "https://storage.googleapis.com/dipp-massimo-development-images/1f1282fef735f349.jpg",
+    "text": {
+        "content": "Dipp inc, thinking out of how to draw a text on the box.",
+        "text_color": "#000000",
+        "border_color": "#000000"
+    },
+    "box": {
+        "x": 40,
+        "y": 100,
+        "width": 500,
+        "height": 180
+    }
 }
 ```
 
@@ -75,33 +75,33 @@ The API should respond with an output similar to the following:
 
 ```json
 {
-  "resource": "http://localhost:8080/api/v1/images/d271afc034924b30.jpg",
-  "splits": [
-    {
-      "content": "Dipp inc, thinking",
-      "font_size": 57,
-      "x": 40,
-      "y": 100
-    },
-    {
-      "content": "out of how to draw",
-      "font_size": 57,
-      "x": 40,
-      "y": 157
-    },
-    {
-      "content": "a text on the box.",
-      "font_size": 57,
-      "x": 40,
-      "y": 214
+    "resource": "http://localhost:8080/api/v1/images/12c1fe1cf860400c.jpg",
+    "splits": [
+        {
+            "content": "Dipp inc, thinking",
+            "font_size": 57,
+            "x": 40,
+            "y": 100
+        },
+        {
+            "content": "out of how to draw",
+            "font_size": 57,
+            "x": 40,
+            "y": 157
+        },
+        {
+            "content": "a text on the box.",
+            "font_size": 57,
+            "x": 40,
+            "y": 214
+        }
+    ],
+    "box": {
+        "height": 180,
+        "width": 500,
+        "x": 40,
+        "y": 100
     }
-  ],
-  "box": {
-    "x": 40,
-    "y": 100,
-    "width": 500,
-    "height": 180
-  }
 }
 ```
 
