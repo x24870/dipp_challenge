@@ -240,8 +240,8 @@ In this part, we will ask you to come in and elaborate your code.
 ## Important notes:
 
 - There is no **right** or **wrong** answer. We are interested in how you approach problem-solving.
-- Please fill free to use any library you want but don't forget to add it in `requirements.txt`
-- Please fill free to refactor the code if the structure does not fit your needs.
+- Please feel free to use any library you want but don't forget to add it in `requirements.txt`
+- Please feel free to refactor the code if the structure does not fit your needs.
 - Please don't hesitate email us if you have any questions.
 
 ## Good luck !!!
