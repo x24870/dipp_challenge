@@ -121,8 +121,8 @@ It will look like this:
 
 ### Write test cases for your endpoints
 
-Eventually, you need to write well-written test cases to make sure your endpoints work expected, and
-they should include success (2xx) and failure (4xx) cases.
+Eventually, you need to write test cases to make sure your endpoints work expected, and they 
+should include success (2xx) and failure (4xx) cases.
 
 You can implement test cases inside the folder: `./tests`, and the following failure examples are for your reference:
 
