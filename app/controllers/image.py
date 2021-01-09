@@ -2,7 +2,7 @@
 Controller responsible for manipulate the images
 """
 from http import HTTPStatus
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 bp_image = Blueprint(name=__name__, import_name=__name__)
 
@@ -15,9 +15,8 @@ def retrieve_image(filename):
     return jsonify({}), HTTPStatus.OK
 
 
-@bp_image.route("/draw", methods=["POST"])
+@bp_image.route("/draw/", methods=["POST"])
 def draw_text_box():
-    """
-    Blueprint method to draw a text box on the image
-    """
+    print(request.get_json())
+
     return jsonify({}), HTTPStatus.OK
