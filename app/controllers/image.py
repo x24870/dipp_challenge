@@ -32,14 +32,12 @@ def draw_text_box():
     # calculate font size and split text
     box = json_data['box']
     text = json_data['text']
-    font_size, text_lst = get_text_and_size(box, text, font_path)
+    font_size, newline_idx = get_text_and_size(box, text, font_path)
 
     # draw text and border
-    colors = {}
-    colors['text_color'] = text['text_color']
-    colors['border_color'] = text['border_color']
+    text = json_data['text']
     ouput_img = draw_content(
-        img_path, box, colors, font_size, text_lst
+        img_path, font_path, box, text, font_size, newline_idx
         )
 
     # output json
@@ -94,6 +92,7 @@ def get_text_and_size(box, text, font_path):
     while l < r:
         font_size = (r - l) // 2 + l
         font = ImageFont.truetype(font_path, font_size)
+        print(f'l: {l}  r: {r}  font:{font_size}')
 
         words = text_lst[:]
         newline_idx = []
@@ -102,7 +101,7 @@ def get_text_and_size(box, text, font_path):
         fit_content = False
         while words:
             word = words[0]
-            word_size = font.getsize(word)
+            word_size = font.getsize(word+' ')
 
             # if this word is the first word of line
             # record the index of the word
@@ -133,7 +132,7 @@ def get_text_and_size(box, text, font_path):
 
     return (l, newline_idx)
 
-def draw_content(image_path, box, colors, font_size, text_lst):
+def draw_content(image_path, font_path, box, text, font_size, newline_idx):
     with Image.open(image_path) as img:
         draw = ImageDraw.Draw(img)
 
@@ -142,16 +141,29 @@ def draw_content(image_path, box, colors, font_size, text_lst):
             (box['x'], box['y']), 
             (box['x']+box['width'], box['y']+box['height'])
         ]
-        draw.rectangle(shape, fill=None, outline=colors['border_color'])
+        draw.rectangle(shape, fill=None, outline=text['border_color'])
 
         # draw text
-        font = ImageFont.truetype("arial.ttf", font_size)
-        draw.multiline_text(
-            (box['x'], box['y']), 
-            ' '.join(text_lst[0]), 
-            font=font, 
-            fill=colors['text_color']
-            )
+        words = text['content'].split()
+        font = ImageFont.truetype(font_path, font_size)
+        cur_h = box['y']
+        print('newline_idx: ', newline_idx)
+        length = len(newline_idx)
+        for idx in range(length):
+            if idx < length - 1:
+                line = words[newline_idx[idx]: newline_idx[idx+1]]
+            else:
+                line = words[newline_idx[idx]:]
+            
+            line = ' '.join(line)
+            font_h = font.getsize(line)[1]
+            draw.multiline_text(
+                (box['x'], cur_h), 
+                line, 
+                font=font, 
+                fill=text['text_color']
+                )
+            cur_h += font_h
 
         img.show()
         # im.save(sys.stdout, "PNG")
