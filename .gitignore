@@ -2,6 +2,8 @@
 images/
 !images/logo.png
 !images/sample.png
+fonts/
+!fonts/keepfolder
 
 # IDE
 .idea

@@ -11,6 +11,7 @@ class _Config:
     """
     WORKING_DIRECTORY = Path(__file__).parent.absolute().parent.absolute()
     IMAGES_DIR = str(Path(WORKING_DIRECTORY, "images"))
+    FONTS_DIR = str(Path(WORKING_DIRECTORY, "fonts"))
 
     PORT = 8080
     HOST = "localhost"
