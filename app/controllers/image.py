@@ -41,7 +41,7 @@ def draw_text_box():
         )
 
     # output json
-
+    
     return jsonify({}), HTTPStatus.OK
 
 def download_img(url):
@@ -92,7 +92,7 @@ def get_text_and_size(box, text, font_path):
     while l < r:
         font_size = (r - l) // 2 + l
         font = ImageFont.truetype(font_path, font_size)
-        print(f'l: {l}  r: {r}  font:{font_size}')
+        # print(f'l: {l}  r: {r}  font:{font_size}')
 
         words = text_lst[:]
         newline_idx = []
@@ -133,6 +133,11 @@ def get_text_and_size(box, text, font_path):
     return (l, newline_idx)
 
 def draw_content(image_path, font_path, box, text, font_size, newline_idx):
+    output_path = os.path.basename(image_path)
+    output_path = image_path.split('.')
+    output_path = f'{output_path[0]}_output.{output_path[1]}'
+    output_path = os.path.join(current_app.config["IMAGES_DIR"], output_path)
+
     with Image.open(image_path) as img:
         draw = ImageDraw.Draw(img)
 
@@ -147,7 +152,6 @@ def draw_content(image_path, font_path, box, text, font_size, newline_idx):
         words = text['content'].split()
         font = ImageFont.truetype(font_path, font_size)
         cur_h = box['y']
-        print('newline_idx: ', newline_idx)
         length = len(newline_idx)
         for idx in range(length):
             if idx < length - 1:
@@ -165,7 +169,8 @@ def draw_content(image_path, font_path, box, text, font_size, newline_idx):
                 )
             cur_h += font_h
 
-        img.show()
-        # im.save(sys.stdout, "PNG")
-
-
+        # img.show()
+        print(f'Saving image: {output_path}')
+        img.save(output_path)
+    
+    return output_path
