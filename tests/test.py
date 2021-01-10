@@ -7,7 +7,7 @@ JSON_DATA = {
     "font_url": "https://storage.googleapis.com/dipp-massimo-development-fonts/4f2cf2b6b99d96ca.ttf",
     "image_url": "https://storage.googleapis.com/dipp-massimo-development-images/1f1282fef735f349.jpg",
     "text": {
-        "content": "Dipp inc, thinking out of how to draw a text on the box.",
+        "content": "Dipp inc, thinking out of how to draw a text on the box. asdw5 asdqq asdsas48956d qwghkad522p",
         "text_color": "#000000",
         "border_color": "#000000"
     },
@@ -23,8 +23,7 @@ class TestCase():
     def __init__(self):
         self.json_data = JSON_DATA
         self.img_path = os.path.join(
-            os.getcwd(),
-            '..',
+            os.path.dirname(os.getcwd()),
             'images',
             'test.jpg'
         )

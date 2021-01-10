@@ -90,10 +90,11 @@ def get_text_and_size(box, text, font_path):
     # min 1 pixel, max 4K pixel
     l = MIN_SIZE = 1
     r = MAX_SIZE = 4096
+    last_fit = 0
     while l < r:
         font_size = (r - l) // 2 + l
         font = ImageFont.truetype(font_path, font_size)
-        # print(f'l: {l}  r: {r}  font:{font_size}')
+        print(f'l: {l}  r: {r}  font:{font_size}')
 
         words = text_lst[:]
         newline_idx = []
@@ -111,7 +112,10 @@ def get_text_and_size(box, text, font_path):
                 idx = origin_len - len(words)
                 newline_idx.append(idx)
                 new_line = False
-                if cur_h > box['height']: break
+                print("***", word, ':', text_lst[idx],' ', cur_h, '  ', fit_content)
+                if cur_h > box['height']:
+                    fit_content = False
+                    break
             
             cur_w += word_size[0]
             # left space can't accommodate this word
@@ -121,23 +125,27 @@ def get_text_and_size(box, text, font_path):
                 new_line = True
             else:
                 words.pop(0)
-        else:
-            fit_content = True
-
+                if not words: fit_content = True
+            
         # if current size can fit box
         # increse font size
         if fit_content:
+            last_fit = font_size
             l = font_size + 1
+            print("fit_content!!!")
         else:
             r = font_size
 
-    return (l, newline_idx)
+    return (last_fit, newline_idx)
 
 def draw_content(image_path, font_path, box, text, font_size, newline_idx):
     output_path = os.path.basename(image_path)
     output_path = image_path.split('.')
     output_path = f'{output_path[0]}_output.{output_path[1]}'
-    output_path = os.path.join(current_app.config["IMAGES_DIR"], output_path)
+    # output_path = os.path.join(current_app.config["IMAGES_DIR"], output_path)
+    output_path = os.path.join(
+        'F:\Projects\dipp_challenge\dipp-code-challenge\images', output_path
+        )
 
     with Image.open(image_path) as img:
         draw = ImageDraw.Draw(img)
