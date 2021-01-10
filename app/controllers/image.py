@@ -36,13 +36,14 @@ def draw_text_box():
 
     # draw text and border
     text = json_data['text']
-    ouput_img = draw_content(
-        img_path, font_path, box, text, font_size, newline_idx
-        )
+    # ouput_img = draw_content(
+    #     img_path, font_path, box, text, font_size, newline_idx
+    #     )
 
     # output json
+    json_resp = gen_resp_json(img_path, font_path, box, text, font_size, newline_idx)
     
-    return jsonify({}), HTTPStatus.OK
+    return jsonify(json_resp), HTTPStatus.OK
 
 def download_img(url):
     '''
@@ -174,3 +175,37 @@ def draw_content(image_path, font_path, box, text, font_size, newline_idx):
         img.save(output_path)
     
     return output_path
+
+
+def gen_resp_json(image_path, font_path, box, text, font_size, newline_idx):
+    json_resp = {}
+    # resource
+    resource = os.path.basename(image_path)
+    resource = image_path.split('.')
+    resource = f'{resource[0]}_output.{resource[1]}'
+    resource = os.path.join(current_app.config["IMAGES_DIR"], resource)
+    json_resp['resource'] = resource
+
+    json_resp['splits'] = []
+
+    words = text['content'].split()
+    cur_h = box['y']
+    font = ImageFont.truetype(font_path, font_size)
+    newline_num = len(newline_idx)
+    for i in range(newline_num):
+        if i < newline_num - 1:
+            line = words[newline_idx[i]: newline_idx[i+1]]
+        else:
+            line = words[newline_idx[i]:]
+        # content
+        line = ' '.join(line)
+        json_resp['splits'].append({})
+        json_resp['splits'][-1]['content'] = line
+        json_resp['splits'][-1]['font_size'] = font_size
+        # x y
+        font_h = font.getsize(line)[1]
+        cur_h += font_h
+        json_resp['splits'][-1]['x'] = box['x']
+        json_resp['splits'][-1]['y'] = cur_h
+
+    return json_resp
