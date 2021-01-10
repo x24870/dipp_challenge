@@ -24,13 +24,15 @@ def draw_text_box():
     # print(json_data)
 
     # download image
-    img_url = json_data['image_url']
-    img_path = download_img(img_url)
+    img_path = download_img(json_data['image_url'])
+
+    #download font
+    font_path = download_font(json_data['font_url'])
 
     # calculate font size and split text
     box = json_data['box']
     text = json_data['text']
-    font_size, text_lst = get_text_and_size(box, text)
+    font_size, text_lst = get_text_and_size(box, text, font_path)
 
     # draw text and border
     colors = {}
@@ -61,28 +63,75 @@ def download_img(url):
             img.write(block)
     return abs_path
 
-def get_text_and_size(box, text):
+def download_font(url):
     '''
-    return a dictionary contains font size and list of splited text
-    {font_size: 5, text:[['hello', 'world'] ,['second']]}
+    Download font and return the path of the font
     '''
-    img_dir = current_app.config["IMAGES_DIR"]
-    font_name = os.path.join(img_dir, 'test.ttf') # test font
-    font_size = 10
-    font = ImageFont.truetype(font_name, font_size)
-    
-    text_group = []
-    new_group = []
+    font_name = os.path.basename(url)
+    font_dir = current_app.config["FONTS_DIR"]
+    abs_path = os.path.join(font_dir, font_name)
+    with open(abs_path, 'wb') as font:
+        response = requests.get(url, stream=True)
+        if not response.ok:
+            print('Unable to get font')
+
+        for block in response.iter_content(1024):
+            if not block: break
+            font.write(block)
+    return abs_path
+
+def get_text_and_size(box, text, font_path):
+    '''
+    return a dictionary contains font size and index of word of new line
+    {font_size: 8, newline_idx:[0, 3, 9]}
+    '''
     text_lst = text['content'].split()
-    while text_lst:
-        new_group.append(text_lst.pop(0))
-        if len(new_group) == 3:
-            text_group.append(new_group)
-            new_group = []
+    newline_idx = []
+    origin_len = len(text_lst)
+    # min 1 pixel, max 4K pixel
+    l = MIN_SIZE = 1
+    r = MAX_SIZE = 4096
+    while l < r:
+        font_size = (r - l) // 2 + l
+        font = ImageFont.truetype(font_path, font_size)
 
-    # print(text_group)
+        words = text_lst[:]
+        newline_idx = []
+        cur_h = cur_w = 0
+        new_line = True
+        fit_content = False
+        while words:
+            word = words[0]
+            word_size = font.getsize(word)
 
-    return (font_size, text_group)
+            # if this word is the first word of line
+            # record the index of the word
+            if new_line:
+                cur_h += word_size[1]
+                idx = origin_len - len(words)
+                newline_idx.append(idx)
+                new_line = False
+                if cur_h > box['height']: break
+            
+            cur_w += word_size[0]
+            # left space can't accommodate this word
+            # move to next line
+            if cur_w > box['width']:
+                cur_w = 0
+                new_line = True
+            else:
+                words.pop(0)
+        else:
+            fit_content = True
+
+        # if current size can fit box
+        # increse font size
+        if fit_content:
+            l = font_size + 1
+        else:
+            r = font_size
+
+    return (l, newline_idx)
 
 def draw_content(image_path, box, colors, font_size, text_lst):
     with Image.open(image_path) as img:
