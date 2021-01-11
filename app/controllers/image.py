@@ -41,9 +41,6 @@ def draw_text_box():
     return jsonify(json_resp), HTTPStatus.OK
 
 def download_img(url):
-    '''
-    Download image and return the path of the image
-    '''
     img_name = os.path.basename(url)
     img_dir = current_app.config["IMAGES_DIR"]
     abs_path = os.path.join(img_dir, img_name)
@@ -58,9 +55,6 @@ def download_img(url):
     return abs_path
 
 def download_font(url):
-    '''
-    Download font and return the path of the font
-    '''
     font_name = os.path.basename(url)
     font_dir = current_app.config["FONTS_DIR"]
     abs_path = os.path.join(font_dir, font_name)
@@ -75,10 +69,6 @@ def download_font(url):
     return abs_path
 
 def get_text_and_size(box, text, font_path):
-    '''
-    return a dictionary contains font size and index of word of new line
-    {font_size: 8, newline_idx:[0, 3, 9]}
-    '''
     text_lst = text['content'].split()
     # MIN 1 pixel, MAX 4K pixel
     l = 1
@@ -103,6 +93,7 @@ def get_text_and_size(box, text, font_path):
         fit_content = False
         while words:
             word = words[0] + ' '
+
             word_size = get_text_dimensions(word, font)
 
             # if this word is the first word of line
@@ -171,7 +162,8 @@ def gen_resp_json(image_path, font_path, box, text):
     resource = os.path.basename(image_path)
     resource = image_path.split('.')
     resource = f'{resource[0]}_output.{resource[1]}'
-    resource = os.path.join('D:\projects\dipp_challenge\dipp_challenge\images', resource)
+    resource  = os.path.join(current_app.config["IMAGES_DIR"], resource)
+    # resource = os.path.join('D:\projects\dipp_challenge\dipp_challenge\images', resource)
     json_resp['resource'] = resource
 
     json_resp['splits'] = get_text_and_size(
