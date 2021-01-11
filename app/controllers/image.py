@@ -29,19 +29,14 @@ def draw_text_box():
     #download font
     font_path = download_font(json_data['font_url'])
 
-    # calculate font size and split text
+    # generate response json
     box = json_data['box']
     text = json_data['text']
-    font_size, newline_idx = get_text_and_size(box, text, font_path)
+    json_resp = gen_resp_json(img_path, font_path, box, text)
 
     # draw text and border
-    text = json_data['text']
-    # ouput_img = draw_content(
-    #     img_path, font_path, box, text, font_size, newline_idx
-    #     )
-
-    # output json
-    json_resp = gen_resp_json(img_path, font_path, box, text, font_size, newline_idx)
+    colors = (text['border_color'], text['text_color'])
+    draw_content(img_path, font_path, box, colors, json_resp)
     
     return jsonify(json_resp), HTTPStatus.OK
 
@@ -85,61 +80,67 @@ def get_text_and_size(box, text, font_path):
     {font_size: 8, newline_idx:[0, 3, 9]}
     '''
     text_lst = text['content'].split()
-    newline_idx = []
-    origin_len = len(text_lst)
-    # min 1 pixel, max 4K pixel
-    l = MIN_SIZE = 1
-    r = MAX_SIZE = 4096
+    # MIN 1 pixel, MAX 4K pixel
+    l = 1
+    r = 4096
+    last_fit = None
     while l < r:
         font_size = (r - l) // 2 + l
         font = ImageFont.truetype(font_path, font_size)
-        # print(f'l: {l}  r: {r}  font:{font_size}')
+        print(f'l: {l}  r: {r}  font:{font_size}')
 
         words = text_lst[:]
-        newline_idx = []
-        cur_h = cur_w = 0
+        splits = []
+        init_splite = {
+            'content': '',
+            'font_size': font_size,
+            'x': box['x'],
+            'y': box['y']
+        }
+        new_splite = None
+        cur_h = cur_w = 0 # inbox coordinate
         new_line = True
         fit_content = False
         while words:
-            word = words[0]
-            word_size = font.getsize(word+' ')
+            word = words[0] + ' '
+            word_size = get_text_dimensions(word, font)
 
             # if this word is the first word of line
             # record the index of the word
             if new_line:
+                new_splite = init_splite.copy()
+                new_splite['y'] += cur_h
                 cur_h += word_size[1]
-                idx = origin_len - len(words)
-                newline_idx.append(idx)
+                splits.append(new_splite)
                 new_line = False
-                if cur_h > box['height']: break
+                if cur_h > box['height']:
+                    splits.clear()
+                    fit_content = False
+                    break
             
-            cur_w += word_size[0]
             # left space can't accommodate this word
             # move to next line
+            cur_w += word_size[0]
             if cur_w > box['width']:
                 cur_w = 0
                 new_line = True
             else:
+                new_splite['content'] += word
                 words.pop(0)
-        else:
-            fit_content = True
-
+                if not words: fit_content = True
+            
         # if current size can fit box
-        # increse font size
+        # store current result and increse font size
         if fit_content:
+            last_fit = splits
             l = font_size + 1
         else:
             r = font_size
 
-    return (l, newline_idx)
+    return last_fit
 
-def draw_content(image_path, font_path, box, text, font_size, newline_idx):
-    output_path = os.path.basename(image_path)
-    output_path = image_path.split('.')
-    output_path = f'{output_path[0]}_output.{output_path[1]}'
-    output_path = os.path.join(current_app.config["IMAGES_DIR"], output_path)
-
-    with Image.open(image_path) as img:
+def draw_content(img_path, font_path, box, colors, json_resp):
+    with Image.open(img_path) as img:
         draw = ImageDraw.Draw(img)
 
         # draw rectangle
@@ -147,65 +148,47 @@ def draw_content(image_path, font_path, box, text, font_size, newline_idx):
             (box['x'], box['y']), 
             (box['x']+box['width'], box['y']+box['height'])
         ]
-        draw.rectangle(shape, fill=None, outline=text['border_color'])
+        draw.rectangle(shape, fill=None, outline=colors[0])
 
         # draw text
-        words = text['content'].split()
+        font_size = json_resp['splits'][0]['font_size']
         font = ImageFont.truetype(font_path, font_size)
-        cur_h = box['y']
-        length = len(newline_idx)
-        for idx in range(length):
-            if idx < length - 1:
-                line = words[newline_idx[idx]: newline_idx[idx+1]]
-            else:
-                line = words[newline_idx[idx]:]
-            
-            line = ' '.join(line)
-            font_h = font.getsize(line)[1]
+        for s in json_resp['splits']:
             draw.multiline_text(
-                (box['x'], cur_h), 
-                line, 
+                (s['x'], s['y']), 
+                s['content'], 
                 font=font, 
-                fill=text['text_color']
+                fill=colors[1]
                 )
-            cur_h += font_h
 
         # img.show()
-        print(f'Saving image: {output_path}')
-        img.save(output_path)
+        img.save(json_resp['resource'])
     
-    return output_path
 
-
-def gen_resp_json(image_path, font_path, box, text, font_size, newline_idx):
+def gen_resp_json(image_path, font_path, box, text):
     json_resp = {}
     # resource
     resource = os.path.basename(image_path)
     resource = image_path.split('.')
     resource = f'{resource[0]}_output.{resource[1]}'
-    resource = os.path.join(current_app.config["IMAGES_DIR"], resource)
+    resource = os.path.join('D:\projects\dipp_challenge\dipp_challenge\images', resource)
     json_resp['resource'] = resource
 
-    json_resp['splits'] = []
+    json_resp['splits'] = get_text_and_size(
+        box, text, font_path
+    )
 
-    words = text['content'].split()
-    cur_h = box['y']
-    font = ImageFont.truetype(font_path, font_size)
-    newline_num = len(newline_idx)
-    for i in range(newline_num):
-        if i < newline_num - 1:
-            line = words[newline_idx[i]: newline_idx[i+1]]
-        else:
-            line = words[newline_idx[i]:]
-        # content
-        line = ' '.join(line)
-        json_resp['splits'].append({})
-        json_resp['splits'][-1]['content'] = line
-        json_resp['splits'][-1]['font_size'] = font_size
-        # x y
-        font_h = font.getsize(line)[1]
-        cur_h += font_h
-        json_resp['splits'][-1]['x'] = box['x']
-        json_resp['splits'][-1]['y'] = cur_h
-
+    print(json_resp)
     return json_resp
+
+def get_text_dimensions(text_string, font):
+    # https://stackoverflow.com/a/46220683/9263761
+    ascent, descent = font.getmetrics()
+
+    text_width = (
+        font.getmask(text_string).getbbox()[2]
+        + font.getlength(' ')
+    )
+    text_height = font.getmask(text_string).getbbox()[3] + descent
+
+    return (text_width, text_height)
