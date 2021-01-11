@@ -7,6 +7,8 @@ from http import HTTPStatus
 from flask import Blueprint, jsonify, current_app, request
 from PIL import ImageFont, ImageDraw, Image
 
+from .resp import APIResponse
+
 bp_image = Blueprint(name=__name__, import_name=__name__)
 
 @bp_image.route("/images/<filename>", methods=["GET"])
@@ -25,14 +27,17 @@ def draw_text_box():
 
     # download image
     img_path = download_img(json_data['image_url'])
+    if img_path == None: return APIResponse.unable_fetch_file()
 
     #download font
     font_path = download_font(json_data['font_url'])
+    if font_path == None: return APIResponse.unable_fetch_file()
 
     # generate response json
     box = json_data['box']
     text = json_data['text']
     json_resp = gen_resp_json(img_path, font_path, box, text)
+    if json_resp['splits'] == None: return APIResponse.unable_fit_content()
 
     # draw text and border
     colors = (text['border_color'], text['text_color'])
@@ -47,7 +52,7 @@ def download_img(url):
     with open(abs_path, 'wb') as img:
         response = requests.get(url, stream=True)
         if not response.ok:
-            print('Unable to get image')
+            return None
 
         for block in response.iter_content(1024):
             if not block: break
@@ -61,7 +66,7 @@ def download_font(url):
     with open(abs_path, 'wb') as font:
         response = requests.get(url, stream=True)
         if not response.ok:
-            print('Unable to get font')
+            return None
 
         for block in response.iter_content(1024):
             if not block: break
@@ -77,7 +82,7 @@ def get_text_and_size(box, text, font_path):
     while l < r:
         font_size = (r - l) // 2 + l
         font = ImageFont.truetype(font_path, font_size)
-        print(f'l: {l}  r: {r}  font:{font_size}')
+        # print(f'l: {l}  r: {r}  font:{font_size}')
 
         words = text_lst[:]
         splits = []
@@ -170,7 +175,7 @@ def gen_resp_json(image_path, font_path, box, text):
         box, text, font_path
     )
 
-    print(json_resp)
+    # print(json_resp)
     return json_resp
 
 def get_text_dimensions(text_string, font):
