@@ -1,7 +1,8 @@
 """
 Controller responsible for manipulate the images
 """
-import os
+import os, re
+
 import requests
 from http import HTTPStatus
 from flask import Blueprint, jsonify, current_app, request
@@ -21,9 +22,10 @@ def retrieve_image(filename):
 
 @bp_image.route("/draw/", methods=["POST"])
 def draw_text_box():
-    # get json
+    # validate json data
     json_data = request.get_json()
-    # print(json_data)
+    is_valid, status = validate_params(json_data)
+    if not is_valid: return status
 
     # download image
     img_path = download_img(json_data['image_url'])
@@ -43,7 +45,7 @@ def draw_text_box():
     colors = (text['border_color'], text['text_color'])
     draw_content(img_path, font_path, box, colors, json_resp)
     
-    return jsonify(json_resp), HTTPStatus.OK
+    return APIResponse.success(json_resp)
 
 def download_img(url):
     img_name = os.path.basename(url)
@@ -189,3 +191,38 @@ def get_text_dimensions(text_string, font):
     text_height = font.getmask(text_string).getbbox()[3] + descent
 
     return (text_width, text_height)
+
+def validate_params(json_data):
+    '''
+    Validate all parameters.
+    if not valid, return (False, statue)
+    else return (True, None)
+    '''
+    try:
+        font_url = json_data['font_url']
+        image_url = json_data['image_url']
+        text = json_data['text']
+        content = json_data['text']['content']
+        text_color = json_data['text']['text_color']
+        border_color = json_data['text']['border_color']
+        box = json_data['box']
+        x = int(json_data['box']['x'])
+        y = int(json_data['box']['y'])
+        width = int(json_data['box']['width'])
+        height = int(json_data['box']['height'])
+    except:
+        return False, APIResponse.invalid_params()
+
+    # validate content
+    if content.strip() == '': return False, APIResponse.invalid_params
+
+    # validate colors
+    regex = r'^#(?:[0-9a-fA-F]{3}){1,2}$'
+    if not re.match(regex, text_color) or not re.match(regex, border_color):
+        return False, APIResponse.invalid_params()
+
+    # validate box
+    if x < 0 or y < 0 or width < 1 or height < 1:
+        return False, APIResponse.invalid_params()
+
+    return True, None
