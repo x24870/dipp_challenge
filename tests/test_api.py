@@ -1,4 +1,4 @@
-import unittest
+import unittest, sys, copy
 from flask import url_for
 from flask_testing import TestCase
 from app.app import create_app
@@ -61,7 +61,8 @@ class SettingBase(TestCase):
 
 class TestImageAPI(SettingBase):
     def test_valid_params(self):
-        resp = self.api_draw_request('POST', JSON_DATA)
+        json = copy.deepcopy(JSON_DATA)
+        resp = self.api_draw_request('POST', json)
         self.assertEqual(resp.status_code, 200)
 
     def test_invalid_http_method(self):
@@ -71,6 +72,33 @@ class TestImageAPI(SettingBase):
         self.assertEqual(resp.status_code, 405)
         resp = self.api_draw_request('DELETE', JSON_DATA)
         self.assertEqual(resp.status_code, 405)
+
+    def test_invalid_params(self):
+        # empty content
+        json = copy.deepcopy(JSON_DATA)
+        json['text']['content'] = ''
+        resp = self.api_draw_request('POST', json)
+        self.assertEqual(resp.status_code, 400)
+        # invalid image url
+        json = copy.deepcopy(JSON_DATA)
+        json['image_url'] = 'https://not-exist.jpg'
+        resp = self.api_draw_request('POST', json)
+        self.assertEqual(resp.status_code, 400)
+        # invalid font url
+        json = copy.deepcopy(JSON_DATA)
+        json['font_url'] = 'https://not-exist.ttf'
+        resp = self.api_draw_request('POST', json)
+        self.assertEqual(resp.status_code, 400)
+        # unable to fit content
+        json = copy.deepcopy(JSON_DATA)
+        json['box']['width'] = 1
+        resp = self.api_draw_request('POST', json)
+        self.assertEqual(resp.status_code, 400)
+        # box out of image
+        json = copy.deepcopy(JSON_DATA)
+        json['box']['width'] = sys.maxsize
+        resp = self.api_draw_request('POST', json)
+        self.assertEqual(resp.status_code, 400)
 
 if __name__ == '__main__':
     unittest.main()
