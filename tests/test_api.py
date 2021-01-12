@@ -19,6 +19,22 @@ JSON_DATA = {
     }
 }
 
+JSON_DATA2 = {
+    "font_url": "https://storage.googleapis.com/dipp-massimo-development-fonts/4f2cf2b6b99d96ca.ttf",
+    "image_url": "https://wallpapercave.com/wp/wp2532971.jpg",
+    "text": {
+        "content": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "text_color": "#ffffff",
+        "border_color": "#f0f0f0"
+    },
+    "box": {
+        "x": 100,
+        "y": 100,
+        "width": 800,
+        "height": 300
+    }
+}
+
 class SettingBase(TestCase):
     def create_app(self):
         return create_app()
@@ -61,8 +77,9 @@ class SettingBase(TestCase):
 
 class TestImageAPI(SettingBase):
     def test_valid_params(self):
-        json = copy.deepcopy(JSON_DATA)
-        resp = self.api_draw_request('POST', json)
+        resp = self.api_draw_request('POST', JSON_DATA)
+        self.assertEqual(resp.status_code, 200)
+        resp = self.api_draw_request('POST', JSON_DATA2)
         self.assertEqual(resp.status_code, 200)
 
     def test_invalid_http_method(self):
