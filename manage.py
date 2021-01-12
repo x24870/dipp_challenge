@@ -7,6 +7,7 @@ from flask_script import Shell, Manager
 from app.app import create_app
 from urllib.parse import unquote
 
+from tests import test_api
 
 def _create_manager_obj(application):
     """
@@ -59,6 +60,16 @@ def routes():
         line = unquote("{:40s} {:12s} {}".format(line["endpoint"], line["methods"], line["url"]))
         print(line)
 
+
+@manager.command
+def test():
+    import unittest
+    import sys
+    
+    tests = unittest.TestLoader().discover("tests")
+    result = unittest.TextTestRunner(verbosity=2).run(tests)
+    if result.errors or result.failures:
+        sys.exit(1)
 
 if __name__ == "__main__":
     manager.run()
