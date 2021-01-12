@@ -11,7 +11,11 @@ def download_img(url):
     img_dir = current_app.config["IMAGES_DIR"]
     abs_path = os.path.join(img_dir, img_name)
     with open(abs_path, 'wb') as img:
-        response = requests.get(url, stream=True)
+        try:
+            response = requests.get(url, stream=True)
+        except:
+            return None
+
         if not response.ok:
             return None
 
@@ -25,7 +29,11 @@ def download_font(url):
     font_dir = current_app.config["FONTS_DIR"]
     abs_path = os.path.join(font_dir, font_name)
     with open(abs_path, 'wb') as font:
-        response = requests.get(url, stream=True)
+        try:
+            response = requests.get(url, stream=True)
+        except:
+            return None
+            
         if not response.ok:
             return None
 
@@ -171,16 +179,16 @@ def validate_params(json_data):
         return False, APIResponse.invalid_params()
 
     # validate content
-    if content.strip() == '': return False, APIResponse.invalid_params
+    if content.strip() == '': return False, APIResponse.invalid_params('content')
 
     # validate colors
     regex = r'^#(?:[0-9a-fA-F]{3}){1,2}$'
     if not re.match(regex, text_color) or not re.match(regex, border_color):
-        return False, APIResponse.invalid_params()
+        return False, APIResponse.invalid_params('color')
 
     # validate box
     if x < 0 or y < 0 or width < 1 or height < 1:
-        return False, APIResponse.invalid_params()
+        return False, APIResponse.invalid_params('box')
 
     return True, None
 

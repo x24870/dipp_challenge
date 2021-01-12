@@ -19,10 +19,10 @@ class APIResponse():
         }
         return jsonify(json_resp), HTTPStatus.METHOD_NOT_ALLOWED
 
-    def invalid_params():
+    def invalid_params(param=''):
         json_resp = {
             'code': 400,
-            'message': 'Please inspect your params or query valid'
+            'message': f'Please inspect your params[{param}] or query valid'
         }
         return jsonify(json_resp), HTTPStatus.BAD_REQUEST
 
