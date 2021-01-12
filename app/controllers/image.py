@@ -36,6 +36,10 @@ def draw_text_box():
     font_path = download_font(json_data['font_url'])
     if font_path == None: return APIResponse.unable_fetch_file()
 
+    # check box in image
+    is_in_img = box_in_img(img_path, json_data['box'])
+    if not is_in_img: return APIResponse.box_out_of_image()
+
     # generate response json
     box = json_data['box']
     text = json_data['text']

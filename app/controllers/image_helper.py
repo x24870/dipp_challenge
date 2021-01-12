@@ -59,7 +59,6 @@ def get_text_and_size(box, text, font_path):
         fit_content = False
         while words:
             word = words[0] + ' '
-
             word_size = get_text_dimensions(word, font)
 
             # if this word is the first word of line
@@ -184,3 +183,9 @@ def validate_params(json_data):
         return False, APIResponse.invalid_params()
 
     return True, None
+
+def box_in_img(img_path, box):
+    with Image.open(img_path) as img:
+        if box['x']+box['width'] > img.size[0] or box['y']+box['height'] > img.size[1]:
+            return False
+        return True

@@ -39,3 +39,10 @@ class APIResponse():
             'message': "Can not make a text fit in a box"
         }
         return jsonify(json_resp), HTTPStatus.BAD_REQUEST
+
+    def box_out_of_image():
+        json_resp = {
+            'code': 400,
+            'message': "Box exceed image boarder"
+        }
+        return jsonify(json_resp), HTTPStatus.BAD_REQUEST
